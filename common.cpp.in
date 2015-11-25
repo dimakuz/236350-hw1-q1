@@ -1,0 +1,46 @@
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#define __STACK_CHK_c(c)            \
+    if ((c = (c ^ __CANARY)) != 0)   \
+        __stack_chk_fail1();
+
+#define __STACK_CHK()           \
+    do {                        \
+        __STACK_CHK_c(__canary1); \
+        __STACK_CHK_c(__canary2); \
+    } while (0)
+
+static unsigned int urandom() {
+#ifdef __unix__
+    int var;
+    int fd = 0;
+    if ((fd = open("/dev/urandom", O_RDONLY)) < 0) {
+        perror("open");
+        exit(1);
+    }
+    if (read(fd, &var, sizeof (unsigned int)) != sizeof (unsigned int)) {
+        perror("read");
+        exit(1);
+    }
+    close(fd);
+    return var;
+#else // __unix__
+    return 4;
+#endif
+}
+
+static unsigned int __CANARY;
+
+static void __stack_chk_init() __attribute__((constructor));
+static void __stack_chk_init() {
+    __CANARY = urandom();
+}
+
+static void __stack_chk_fail1() {
+    printf("Alert! Buffer Overflow detected.");
+    exit(1);
+}
