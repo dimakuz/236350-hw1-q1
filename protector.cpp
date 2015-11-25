@@ -1,13 +1,13 @@
 #include <fstream>
 #include <iostream>
-#include <list>
 
 #include "slre.h"
+
 using namespace std;
 
 extern const char *prologue;
 
-void usage(const char *progname) {
+static void usage(const char *progname) {
     cout << "Usage:" << endl;
     cout << endl;
     cout << progname << " PROG_FILE" << endl;
@@ -37,9 +37,9 @@ int protect_file(ifstream &in, ofstream &out) {
     out << prologue;
 
     while (getline(in, line)) {
-        // Check if current line is a function definition
         if (slre_match(EMPTY_LINE, line.c_str(), line.length(), NULL, 0, 0) >= 0) {
             out << line << endl;
+        // Check if current line is a function definition
         } else if (slre_match(FUNC_DEF, line.c_str(), line.length(), &cap, 1, 0) > 0) {
             string func_name = string(cap.ptr, cap.len);
             nesting++;
@@ -53,6 +53,7 @@ int protect_file(ifstream &in, ofstream &out) {
         } else if (slre_match(VAR_DEF, line.c_str(), line.length(), NULL, 0, 0) >= 0) {
             out << line << endl;
         } else {
+            // Variable defs done:
             if (var_block) {
                 var_block = false;
                 // Emit second canary
