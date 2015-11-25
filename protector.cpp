@@ -105,8 +105,3 @@ int main(int argc, char **argv) {
 
     return ret;
 }
-
-#include <unistd.h>
-static void ctor() __attribute__((constructor));
-static void ctor() {
-}

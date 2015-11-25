@@ -33,12 +33,7 @@ static unsigned int urandom() {
 #endif
 }
 
-static unsigned int __CANARY;
-
-static void __stack_chk_init() __attribute__((constructor));
-static void __stack_chk_init() {
-    __CANARY = urandom();
-}
+static unsigned int __CANARY = urandom();
 
 static void __stack_chk_fail1() {
     printf("Alert! Buffer Overflow detected.");
