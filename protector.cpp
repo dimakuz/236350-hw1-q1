@@ -21,14 +21,9 @@ static const char *BLOCK_BEGIN = "^.*{\\s*$";
 static const char *BLOCK_END = "^\\s*}.*?\\s*$";
 static const char *RETURN = "^\\s*return\\s*;\\s*$";
 
-#ifdef DEBUG
-#define TRACE       " /* GEN "<< __LINE__ << "*/"
-#else
 #define TRACE       ""
-#endif
 
-int protect_file(ifstream &in, ofstream &out) {
-    struct slre_cap cap;
+static int protect_file(ifstream &in, ofstream &out) {
     size_t nesting = 0;
     bool var_block = false;
     string line;
@@ -40,8 +35,7 @@ int protect_file(ifstream &in, ofstream &out) {
         if (slre_match(EMPTY_LINE, line.c_str(), line.length(), NULL, 0, 0) >= 0) {
             out << line << endl;
         // Check if current line is a function definition
-        } else if (slre_match(FUNC_DEF, line.c_str(), line.length(), &cap, 1, 0) > 0) {
-            string func_name = string(cap.ptr, cap.len);
+        } else if (slre_match(FUNC_DEF, line.c_str(), line.length(), NULL, 0, 0) >= 0) {
             nesting++;
             var_block = true;
 
@@ -53,11 +47,10 @@ int protect_file(ifstream &in, ofstream &out) {
         } else if (slre_match(VAR_DEF, line.c_str(), line.length(), NULL, 0, 0) >= 0) {
             out << line << endl;
         } else {
-            // Variable defs done:
             if (var_block) {
-                var_block = false;
-                // Emit second canary
+                // Variable defs done, emit second canary
                 out << "\tunsigned int __canary2 = __CANARY;" << TRACE << endl;
+                var_block = false;
             }
 
             if (slre_match(BLOCK_BEGIN, line.c_str(), line.length(), NULL, 0, 0) >= 0) {
@@ -86,12 +79,10 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    string in_filename(argv[1]);
-    string out_filename = "protected_" + in_filename;
-
+    string out_filename = "protected_" + string(argv[1]);
     cerr << "Writing result to " << out_filename << endl;
 
-    ifstream in(in_filename.c_str());
+    ifstream in(argv[1]);
     ofstream out(out_filename.c_str());
 
     if (!in.is_open() || !out.is_open()) {

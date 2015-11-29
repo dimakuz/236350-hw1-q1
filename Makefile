@@ -9,10 +9,10 @@ common.cpp: common.cpp.in
 	./dump_c.py $< > $@
 
 clean:
-	rm -f $(TARGET) common.cpp
+	rm -f $(TARGET) common.cpp q1.tar.gz
 
 q1.tar.gz: $(TARGET) protector.cpp common.cpp slre.cpp slre.h
-	tar cvzf $@ $^
+	tar cvzf $@ *.cpp *.h
 handin: q1.tar.gz
 
 .PHONY: clean common.cpp
